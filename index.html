@@ -319,13 +319,9 @@
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
           Add Manual Transaction
         </button>
-        <button id="sync-btn">
+        <button id="sync-btn" class="success">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           <span id="sync-btn-text">Sync Bank Data</span>
-        </button>
-        <button id="connect-bank-btn" onclick="document.getElementById('simplefin-modal').showModal()" class="success">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-          <span id="connect-btn-text">Connect Bank Account</span>
         </button>
         <button class="danger" onclick="handleLogout()">Log Out</button>
       </div>
@@ -477,24 +473,6 @@
         <button class="secondary" onclick="document.getElementById('manage-categories-dialog').close()">Close</button>
       </div>
     </dialog>
-
-    <!-- SimpleFIN Connection Dialog -->
-    <dialog id="simplefin-modal">
-      <h3 style="margin-top: 0;">Connect SimpleFIN</h3>
-      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;">
-        Paste your SimpleFIN Setup Token to securely connect your bank accounts.
-      </p>
-      <form id="simplefin-form" onsubmit="claimSimpleFinToken(event)">
-        <div class="dialog-row" style="margin-bottom: 24px;">
-          <input type="text" id="sf-setup-token" placeholder="Paste setup token here..." required style="width: 100%;">
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 12px;">
-          <button type="button" class="secondary" onclick="document.getElementById('simplefin-modal').close()">Cancel</button>
-          <button type="submit" id="sf-submit-btn">Connect Bank</button>
-        </div>
-      </form>
-    </dialog>
-
   </div>
 
   <script>
@@ -563,46 +541,6 @@
     function hideStatus() {
       const banner = document.getElementById('status-banner');
       banner.classList.add('hidden');
-    }
-
-    // ------------------------------------------------------------------
-    // 2. SIMPLEFIN LINK FLOW
-    // ------------------------------------------------------------------
-    async function claimSimpleFinToken(e) {
-      e.preventDefault();
-      const setupToken = document.getElementById('sf-setup-token').value.trim();
-      const btn = document.getElementById('sf-submit-btn');
-      
-      btn.disabled = true;
-      btn.innerText = 'Connecting...';
-      hideStatus();
-
-      try {
-        const { data, error } = await supabaseClient.functions.invoke('simplefin-claim', {
-          body: { setup_token: setupToken }
-        });
-
-        if (error) throw new Error(error.message);
-        if (data && data.error) throw new Error(data.error);
-
-        document.getElementById('simplefin-modal').close();
-        document.getElementById('sf-setup-token').value = '';
-        showStatus('Bank accounts connected successfully! Syncing data...', 'info');
-
-        // Automatically sync transactions after connecting
-        const syncRes = await supabaseClient.functions.invoke('simplefin-sync');
-        if (syncRes.error) throw new Error("Connection successful, but sync failed: " + syncRes.error.message);
-        if (syncRes.data && syncRes.data.error) throw new Error("Connection successful, but sync failed: " + syncRes.data.error);
-
-        showStatus('Transactions synced successfully!', 'success');
-        await fetchTransactions();
-
-      } catch (err) {
-        showStatus(err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerText = 'Connect Bank';
-      }
     }
 
     // --- Sync Button Handler ---
