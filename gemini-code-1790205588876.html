@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-hover: #f9fafb;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --success-bg: #ecfdf5;
+      --radius-xl: 16px;
+      --radius-lg: 12px;
+      --radius-md: 8px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-glow: 0 0 15px rgba(99, 102, 241, 0.15);
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: var(--text);
+      background-color: var(--bg);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Layout & Header */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    h2 { font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.02em; color: var(--text); }
+    h3 { font-size: 18px; font-weight: 600; margin: 0 0 16px 0; color: var(--text); }
+    h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin: 0 0 12px 0; }
+
+    .panel {
+      background: var(--surface);
+      padding: 28px;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      margin-bottom: 32px;
+      transition: var(--transition);
+    }
+    .panel:hover { box-shadow: var(--shadow-lg); }
+
+    /* Buttons */
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    button:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+    button:active { transform: translateY(0); }
+    button.secondary { background-color: #f1f5f9; color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+    button.secondary:hover { background-color: var(--border); box-shadow: var(--shadow-sm); }
+    button.success { background-color: var(--success); color: white; }
+    button.success:hover { background-color: #059669; }
+    button.danger { background-color: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; }
+    button.danger:hover { background-color: #fee2e2; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* Form Controls */
+    input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="password"], select {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      background-color: var(--surface);
+      color: var(--text);
+      transition: var(--transition);
+      outline: none;
+      box-shadow: var(--shadow-sm);
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .table-select {
+      padding: 6px 10px !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      box-shadow: none !important;
+      border-color: transparent;
+      border-radius: var(--radius-sm);
+    }
+    .table-select:hover { filter: brightness(0.95); }
+    .table-select:focus { border-color: var(--text-muted); }
+
+    .control-group { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+
+    /* Dashboard & Summary Components */
+    .budget-dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .budget-card {
+      background: var(--bg);
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: var(--transition);
+    }
+    .budget-card:hover { border-color: #cbd5e1; }
+
+    .surplus-display { font-size: 32px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+    .text-green { color: var(--success); }
+    .text-red { color: var(--danger); }
+    .subtext { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+    /* Tables */
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 16px;
+    }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; min-width: 600px; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    th { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); background: var(--bg); letter-spacing: 0.05em; }
+
+    .data-table tbody tr { transition: background-color 0.15s ease; }
+    .data-table tbody tr:hover { background-color: var(--surface-hover); }
+    .merchant-cell { font-weight: 600; color: var(--text); }
+
+    .summary-table tbody tr.clickable-row { cursor: pointer; transition: background-color 0.15s ease; }
+    .summary-table tbody tr.clickable-row:hover { background-color: var(--surface-hover); }
+    .summary-total-row { font-weight: 700; background: var(--bg); }
+    .summary-total-row td { border-bottom: none; }
+
+    /* Category Badges */
+    .cat-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    /* Source Badges */
+    .source-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      display: inline-block;
+    }
+    .source-simplefin { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .source-manual { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* Budget Input Field */
+    .budget-input-wrapper { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 8px; transition: var(--transition); }
+    .budget-input-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+    .budget-input { width: 80px; padding: 4px 0; font-size: 13px; border: none !important; box-shadow: none !important; background: transparent; }
+
+    /* Progress Bar */
+    .progress-wrapper { display: flex; align-items: center; gap: 10px; }
+    .progress-bar-bg {
+      flex-grow: 1;
+      height: 8px;
+      background-color: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+      min-width: 90px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.4s ease, background-color 0.3s ease;
+    }
+    .progress-text { font-size: 12px; font-weight: 700; min-width: 36px; text-align: right; }
+
+    /* Warning Box */
+    .warning-box {
+      border: 1px solid #fca5a5;
+      background-color: var(--danger-bg);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-sizing: border-box;
+    }
+    .warning-box:hover { background-color: #fee2e2; border-color: var(--danger); transform: translateY(-1px); }
+    .warning-box h4 { margin: 0; color: #991b1b; }
+    .warning-amount { font-size: 18px; font-weight: 800; color: #991b1b; }
+
+    /* Toolbars */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      background: var(--bg);
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .toolbar-transparent { background: transparent; border: none; padding: 0; }
+
+    /* Dialog (Modal) */
+    dialog {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface);
+    }
+    dialog[open] { animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    dialog::backdrop { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(3px); }
+    .dialog-row { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* Status Banner Styles */
+    #status-banner { margin-bottom: 24px; padding: 16px; border-radius: var(--radius-md); font-weight: 500; font-size: 14px; }
+    #status-banner.hidden { display: none; }
+    .bg-red-50 { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .bg-emerald-50 { background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .bg-blue-50 { background-color: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
+
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      body { margin: 20px auto; padding: 0 16px; }
+      .header-container { flex-direction: column; align-items: stretch; gap: 12px; }
+      .header-container button { width: 100%; }
+      .panel { padding: 20px 16px; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .control-group { width: 100%; flex-direction: column; align-items: stretch; }
+      .control-group > * { width: 100% !important; margin-left: 0 !important; }
+      .toolbar-transparent { flex-direction: column; gap: 16px; }
+      dialog { padding: 24px 16px; }
+    }
+  </style>
+
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Login Container -->
+  <div id="auth-container" class="panel" style="max-width: 400px; margin: 80px auto; text-align: center; display: block;">
+    <h3>Sign In</h3>
+    <p class="subtext" style="margin-bottom: 20px;">Invite-only budget dashboard access.</p>
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="dialog-row">
+        <input type="email" id="auth-email" placeholder="Email" required style="width: 100%; box-sizing: border-box;">
+      </div>
+      <div class="dialog-row" style="margin-bottom: 20px;">
+        <input type="password" id="auth-password" placeholder="Password" required style="width: 100%; box-sizing: border-box;">
+      </div>
+      <button type="submit" style="width: 100%;">Log In</button>
+    </form>
+    <div id="auth-error" style="color: var(--danger); font-size: 13px; margin-top: 12px; display: none;"></div>
+  </div>
+
+  <!-- Main Dashboard Container -->
+  <div id="app-container" style="display: none;">
+    <header class="header-container">
+      <h2>Budget Dashboard</h2>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button class="secondary" onclick="document.getElementById('manual-modal').showModal()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+          Add Manual Transaction
+        </button>
+        <button id="sync-btn">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <span id="sync-btn-text">Sync Bank Data</span>
+        </button>
+        <button id="connect-bank-btn" onclick="document.getElementById('simplefin-modal').showModal()" class="success">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+          <span id="connect-btn-text">Connect Bank Account</span>
+        </button>
+        <button class="danger" onclick="handleLogout()">Log Out</button>
+      </div>
+    </header>
+
+    <div id="status-banner" class="hidden"></div>
+
+    <div class="panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <h3>Monthly Overview</h3>
+        <div class="control-group" style="flex-direction: row;">
+          <label for="month-filter">Summary Month</label>
+          <select id="month-filter" class="table-select" style="padding: 9px 12px !important;" onchange="renderUI()"></select>
+        </div>
+      </div>
+
+      <div class="budget-dashboard">
+        <div class="budget-card">
+          <h4>Income Settings</h4>
+          <div class="control-group" style="gap: 8px; flex-direction: row;">
+            <span style="font-weight: 600; color: var(--text-muted);">$</span>
+            <input type="number" id="manual-income" value="0" step="100" style="width: 100px; font-weight: 700; font-size: 15px;" onchange="saveUserSettings()">
+            <select id="income-mode" onchange="saveUserSettings()" style="flex-grow: 1; width: auto !important;">
+              <option value="add">Add to Tracked</option>
+              <option value="overwrite">Overwrite Tracked</option>
+            </select>
+          </div>
+          <div class="subtext" id="income-breakdown-text" style="margin-top: 4px;"></div>
+        </div>
+
+        <div class="budget-card">
+          <h4 id="surplus-label">Net Result</h4>
+          <div id="budget-result" class="surplus-display"></div>
+          <div class="subtext" id="expenses-breakdown-text" style="margin-top: 4px;"></div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Category Breakdown</th>
+              <th style="width: 140px;">Budget Target</th>
+              <th style="text-align: right; width: 130px;">Total Spent</th>
+              <th style="width: 190px;">Progress</th>
+            </tr>
+          </thead>
+          <tbody id="category-breakdown-body"></tbody>
+        </table>
+      </div>
+
+      <div id="uncategorized-section" class="warning-box" style="display: none;" title="Filter by Uncategorized">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" color="#991b1b"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          <h4>Action Required: Uncategorized</h4>
+        </div>
+        <div class="warning-amount" id="uncategorized-total">$0.00</div>
+      </div>
+    </div>
+
+    <div class="panel" id="transactions-panel">
+      <h3>Transaction Details</h3>
+      <div class="toolbar">
+        <div class="control-group" style="flex-direction: row;">
+          <label for="tx-month-filter">Month:</label>
+          <select id="tx-month-filter" onchange="renderUI()" style="width: auto !important;"></select>
+          <label for="tx-category-filter" style="margin-left: 12px;">Category:</label>
+          <select id="tx-category-filter" onchange="renderUI()" style="width: auto !important;"></select>
+          <button class="secondary" onclick="clearFilters()" style="padding: 8px 12px; font-size: 13px; width: auto !important;">Clear</button>
+        </div>
+      </div>
+
+      <div class="toolbar toolbar-transparent">
+        <div class="control-group" style="flex-direction: row;">
+          <select id="bulk-category-select" style="width: auto !important;">
+            <option value="">Select Category...</option>
+          </select>
+          <button class="secondary" onclick="applyBulkCategory()" style="width: auto !important;">Apply to Selected</button>
+        </div>
+        <div class="control-group" style="flex-direction: row;">
+          <input type="text" id="new-category-name" placeholder="New Category Name" style="width: 180px;">
+          <button class="secondary" onclick="createCategory()" style="width: auto !important;">Add</button>
+          <button class="secondary" onclick="document.getElementById('manage-categories-dialog').showModal()" style="width: auto !important;">Manage</button>
+        </div>
+      </div>
+
+      <div class="table-responsive" style="margin-bottom: 0;">
+        <table class="data-table" style="border: none;">
+          <thead>
+            <tr>
+              <th style="width: 40px; padding-left: 16px;"><input type="checkbox" id="select-all" onclick="toggleAll(this)" style="accent-color: var(--primary);"></th>
+              <th>Date</th>
+              <th>Reporting Month</th>
+              <th>Merchant</th>
+              <th>Category</th>
+              <th style="text-align: right;">Amount</th>
+              <th style="padding-right: 16px;">Source</th>
+            </tr>
+          </thead>
+          <tbody id="transactions-body">
+            <tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">Loading transactions...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Manual Transaction Dialog -->
+    <dialog id="manual-modal">
+      <h3 style="margin-top: 0;">Add Manual Transaction</h3>
+      <form id="manual-form" onsubmit="saveManualTransaction(event)">
+        <div class="dialog-row">
+          <label for="txn-date">Date</label>
+          <input type="date" id="txn-date" required>
+        </div>
+        <div class="dialog-row">
+          <label for="txn-merchant">Merchant / Description</label>
+          <input type="text" id="txn-merchant" placeholder="e.g. Local Hardware Store" required>
+        </div>
+        <div class="dialog-row">
+          <label for="txn-amount">Amount ($)</label>
+          <input type="number" step="0.01" id="txn-amount" placeholder="0.00" required>
+        </div>
+        <div class="dialog-row" style="margin-bottom: 32px;">
+          <label for="txn-category">Category</label>
+          <select id="txn-category"></select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="secondary" onclick="closeManualModal()">Cancel</button>
+          <button type="submit">Save Transaction</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Manage Categories Dialog -->
+    <dialog id="manage-categories-dialog">
+      <h3 style="margin-top: 0;">Manage Categories</h3>
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;">
+        Rename or delete custom categories. Transactions in a deleted category revert to Uncategorized.
+      </p>
+      <div class="dialog-row">
+        <select id="manage-category-select"></select>
+      </div>
+      <div class="dialog-row" style="flex-direction: row; margin-bottom: 32px; gap: 12px;">
+        <input type="text" id="rename-category-input" placeholder="New name..." style="flex-grow: 1;">
+        <button class="secondary" id="rename-cat-btn" onclick="renameCategory()">Rename</button>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <button id="delete-cat-btn" class="danger" onclick="deleteCategory()">Delete Category</button>
+        <button class="secondary" onclick="document.getElementById('manage-categories-dialog').close()">Close</button>
+      </div>
+    </dialog>
+
+    <!-- SimpleFIN Connection Dialog -->
+    <dialog id="simplefin-modal">
+      <h3 style="margin-top: 0;">Connect SimpleFIN</h3>
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;">
+        Paste your SimpleFIN Setup Token to securely connect your bank accounts.
+      </p>
+      <form id="simplefin-form" onsubmit="claimSimpleFinToken(event)">
+        <div class="dialog-row" style="margin-bottom: 24px;">
+          <input type="text" id="sf-setup-token" placeholder="Paste setup token here..." required style="width: 100%;">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="secondary" onclick="document.getElementById('simplefin-modal').close()">Cancel</button>
+          <button type="submit" id="sf-submit-btn">Connect Bank</button>
+        </div>
+      </form>
+    </dialog>
+
+  </div>
+
+  <script>
+    // ------------------------------------------------------------------
+    // 1. SUPABASE CONFIGURATION - UPDATE THESE FOR YOUR NEW PROJECT
+    // ------------------------------------------------------------------
+    const SUPABASE_URL = 'YOUR_NEW_PROJECT_URL_HERE';
+    const SUPABASE_ANON_KEY = 'YOUR_NEW_ANON_KEY_HERE';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- AUTHENTICATION HANDLERS ---
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        document.getElementById('auth-container').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+        initialize();
+      } else {
+        document.getElementById('auth-container').style.display = 'block';
+        document.getElementById('app-container').style.display = 'none';
+      }
+    });
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      const errEl = document.getElementById('auth-error');
+
+      errEl.style.display = 'none';
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        errEl.innerText = error.message;
+        errEl.style.display = 'block';
+      }
+    }
+
+    async function handleLogout() {
+      await supabaseClient.auth.signOut();
+      window.location.reload();
+    }
+
+    let allTransactions = [];
+    let dbCategories = [];
+    let allCategories = ['Does Not Count', 'Income']; 
+    let categoryBudgets = {}; 
+    
+    const today = new Date();
+    const currentLocalMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('txn-date').valueAsDate = today;
+
+    // --- Banner Status Helpers ---
+    function showStatus(message, type) {
+      const banner = document.getElementById('status-banner');
+      banner.classList.remove('hidden', 'bg-red-50', 'bg-emerald-50', 'bg-blue-50');
+      if (type === 'error') {
+        banner.classList.add('bg-red-50');
+      } else if (type === 'success') {
+        banner.classList.add('bg-emerald-50');
+      } else {
+        banner.classList.add('bg-blue-50');
+      }
+      banner.innerText = message;
+    }
+
+    function hideStatus() {
+      const banner = document.getElementById('status-banner');
+      banner.classList.add('hidden');
+    }
+
+    // ------------------------------------------------------------------
+    // 2. SIMPLEFIN LINK FLOW
+    // ------------------------------------------------------------------
+    async function claimSimpleFinToken(e) {
+      e.preventDefault();
+      const setupToken = document.getElementById('sf-setup-token').value.trim();
+      const btn = document.getElementById('sf-submit-btn');
+      
+      btn.disabled = true;
+      btn.innerText = 'Connecting...';
+      hideStatus();
+
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('simplefin-claim', {
+          body: { setup_token: setupToken }
+        });
+
+        if (error) throw new Error(error.message);
+        if (data && data.error) throw new Error(data.error);
+
+        document.getElementById('simplefin-modal').close();
+        document.getElementById('sf-setup-token').value = '';
+        showStatus('Bank accounts connected successfully! Syncing data...', 'info');
+
+        // Automatically sync transactions after connecting
+        const syncRes = await supabaseClient.functions.invoke('simplefin-sync');
+        if (syncRes.error) throw new Error("Connection successful, but sync failed: " + syncRes.error.message);
+        if (syncRes.data && syncRes.data.error) throw new Error("Connection successful, but sync failed: " + syncRes.data.error);
+
+        showStatus('Transactions synced successfully!', 'success');
+        await fetchTransactions();
+
+      } catch (err) {
+        showStatus(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Connect Bank';
+      }
+    }
+
+    // --- Sync Button Handler ---
+    document.getElementById('sync-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('sync-btn');
+      const btnText = document.getElementById('sync-btn-text');
+      const origText = btnText.innerText;
+      btnText.innerText = 'Syncing...'; 
+      btn.disabled = true;
+      hideStatus();
+      
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('simplefin-sync');
+        if (error) throw new Error(error.message);
+        if (data && data.error) throw new Error(data.error);
+
+        showStatus(`Transactions synced successfully. Imported ${data.count} recent records.`, 'success');
+        await fetchTransactions();
+      } catch (err) {
+        showStatus('Sync failed: ' + err.message, 'error');
+      } finally {
+        btnText.innerText = origText; 
+        btn.disabled = false;
+      }
+    });
+
+    // --- Modern Dynamic Color Palette for Category Badges & Months ---
+    const themePalette = [
+      { bg: '#fee2e2', text: '#991b1b', bar: '#ef4444' },
+      { bg: '#ffedd5', text: '#9a3412', bar: '#f97316' },
+      { bg: '#fef3c7', text: '#92400e', bar: '#f59e0b' },
+      { bg: '#dcfce7', text: '#166534', bar: '#10b981' },
+      { bg: '#e0f2fe', text: '#075985', bar: '#0ea5e9' },
+      { bg: '#dbeafe', text: '#1e40af', bar: '#3b82f6' },
+      { bg: '#e0e7ff', text: '#3730a3', bar: '#6366f1' },
+      { bg: '#f3e8ff', text: '#6b21a8', bar: '#a855f7' },
+      { bg: '#fce7f3', text: '#9d174d', bar: '#ec4899' },
+      { bg: '#f1f5f9', text: '#334155', bar: '#64748b' }
+    ];
+
+    function getCategoryTheme(name) {
+      if (!name || name === 'Uncategorized' || name === 'Does Not Count') return themePalette[9];
+      if (name === 'Income') return themePalette[3]; 
+      
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) { hash = name.charCodeAt(i) + ((hash << 5) - hash); }
+      const index = Math.abs(hash) % (themePalette.length - 1);
+      return themePalette[index];
+    }
+
+    function getMonthTheme(yyyyMm) {
+      if (!yyyyMm) return themePalette[9];
+      const parts = yyyyMm.split('-');
+      if (parts.length !== 2) return themePalette[9];
+      const monthIdx = parseInt(parts[1], 10) - 1; 
+      return themePalette[monthIdx % (themePalette.length - 1)]; 
+    }
+
+    function createBadgeHTML(name) {
+      const displayName = name || 'Uncategorized';
+      const theme = getCategoryTheme(displayName);
+      return `<span class="cat-badge" style="background-color: ${theme.bg}; color: ${theme.text};">${displayName}</span>`;
+    }
+
+    function filterByCategory(categoryName) {
+      const txCatFilter = document.getElementById('tx-category-filter');
+      txCatFilter.value = categoryName;
+      renderUI();
+      document.getElementById('transactions-panel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function clearFilters() {
+      document.getElementById('tx-month-filter').value = '';
+      document.getElementById('tx-category-filter').value = 'All';
+      renderUI();
+    }
+
+    function formatMonthLabel(yyyyMm) {
+      if (!yyyyMm) return '';
+      const parts = yyyyMm.split('-');
+      if (parts.length !== 2) return yyyyMm;
+      const date = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+      return date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    function getAvailableMonths() {
+      const monthsSet = new Set();
+      for (let i = -12; i <= 6; i++) {
+        const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+        monthsSet.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+      }
+      allTransactions.forEach(tx => {
+        const m = getReportingMonth(tx);
+        if (m) monthsSet.add(m);
+      });
+      return Array.from(monthsSet).sort().reverse();
+    }
+
+    function populateMonthDropdowns() {
+      const months = getAvailableMonths();
+      const summarySelect = document.getElementById('month-filter');
+      const currentSummaryVal = summarySelect.value || currentLocalMonth;
+      summarySelect.innerHTML = months.map(m => `<option value="${m}" ${m === currentSummaryVal ? 'selected' : ''}>${formatMonthLabel(m)}</option>`).join('');
+
+      const txMonthSelect = document.getElementById('tx-month-filter');
+      const currentTxVal = txMonthSelect.value || '';
+      txMonthSelect.innerHTML = `<option value="">All Months</option>` + months.map(m => `<option value="${m}" ${m === currentTxVal ? 'selected' : ''}>${formatMonthLabel(m)}</option>`).join('');
+    }
+
+    function generateInlineMonthOptions(selectedVal) {
+      const months = getAvailableMonths();
+      if (selectedVal && !months.includes(selectedVal)) { months.push(selectedVal); months.sort().reverse(); }
+      return months.map(m => `<option value="${m}" ${m === selectedVal ? 'selected' : ''}>${formatMonthLabel(m)}</option>`).join('');
+    }
+
+    function getReportingMonth(tx) {
+      const val = tx.reporting_month || tx.date;
+      if (!val) return currentLocalMonth;
+      const match = String(val).match(/(\d{4})[-/](\d{2})/);
+      if (match) return `${match[1]}-${match[2]}`;
+      const d = new Date(val);
+      return !isNaN(d.getTime()) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` : currentLocalMonth;
+    }
+
+    function parseAmount(val) {
+      if (val === null || val === undefined) return 0;
+      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      const parsed = parseFloat(String(val).replace(/[^0-9.-]/g, ''));
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function formatCurrency(amount) {
+      const num = parseAmount(amount);
+      return `${num < 0 ? '-' : ''}$${Math.abs(num).toFixed(2)}`;
+    }
+
+    // --- Data Initialization & Persistence ---
+    async function initialize() {
+      await fetchUserSettings();
+      await fetchCategories();
+      await fetchCategoryBudgets();
+      await fetchTransactions();
+    }
+
+    async function fetchUserSettings() {
+      const { data, error } = await supabaseClient.from('budget_settings').select('*').limit(1).maybeSingle();
+      if (!error && data) {
+        document.getElementById('manual-income').value = data.manual_income || 0;
+        document.getElementById('income-mode').value = data.income_mode || 'add';
+      }
+    }
+
+    async function saveUserSettings() {
+      const manualIncome = parseAmount(document.getElementById('manual-income').value);
+      const incomeMode = document.getElementById('income-mode').value;
+      renderUI();
+      const { error } = await supabaseClient.from('budget_settings').upsert({ manual_income: manualIncome, income_mode: incomeMode });
+      if (error) console.error('Error saving settings:', error.message);
+    }
+
+    async function fetchCategoryBudgets() {
+      const { data, error } = await supabaseClient.from('category_budgets').select('category, budgeted_amount');
+      if (!error && data) {
+        categoryBudgets = {};
+        data.forEach(row => categoryBudgets[row.category] = parseAmount(row.budgeted_amount));
+      }
+    }
+
+    async function updateCategoryBudget(category, amount) {
+      const numAmount = parseAmount(amount);
+      categoryBudgets[category] = numAmount;
+      renderUI();
+      const { error } = await supabaseClient.from('category_budgets').upsert({ category: category, budgeted_amount: numAmount }, { onConflict: 'category' });
+      if (error) console.error('Error updating budget:', error.message);
+    }
+
+    async function fetchCategories() {
+      const { data, error } = await supabaseClient.from('user_categories').select('name').order('name');
+      if (!error && data) dbCategories = data.map(c => c.name.trim());
+      syncCategoryList();
+    }
+
+    async function fetchTransactions() {
+      const { data, error } = await supabaseClient.from('transactions').select('*').order('date', { ascending: false });
+      if (!error && data) {
+        allTransactions = data;
+        syncCategoryList();
+        renderUI();
+      }
+    }
+
+    function syncCategoryList() {
+      const txCategories = allTransactions.map(t => (t.user_category || '').trim()).filter(c => c && c !== 'Uncategorized');
+      allCategories = [...new Set(['Does Not Count', 'Income', ...dbCategories, ...txCategories])].sort();
+      populateCategoryDropdowns();
+    }
+
+    function populateCategoryDropdowns() {
+      const catOptions = allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+      document.getElementById('bulk-category-select').innerHTML = `<option value="">Select Category...</option>` + catOptions;
+
+      const txCatFilter = document.getElementById('tx-category-filter');
+      const currentTxCat = txCatFilter.value || 'All';
+      txCatFilter.innerHTML = `<option value="All">All Categories</option><option value="Uncategorized">Uncategorized</option>` + catOptions;
+      if (['All', 'Uncategorized', ...allCategories].includes(currentTxCat)) txCatFilter.value = currentTxCat;
+
+      const modalSelect = document.getElementById('txn-category');
+      if (modalSelect) modalSelect.innerHTML = `<option value="">Uncategorized</option>` + catOptions;
+
+      const manageSelect = document.getElementById('manage-category-select');
+      const customCats = allCategories.filter(c => c !== 'Income' && c !== 'Does Not Count');
+      
+      if (customCats.length === 0) {
+        manageSelect.innerHTML = `<option value="">No custom categories created</option>`;
+        manageSelect.disabled = true; 
+        document.getElementById('rename-cat-btn').disabled = true; 
+        document.getElementById('delete-cat-btn').disabled = true;
+      } else {
+        manageSelect.disabled = false; 
+        document.getElementById('rename-cat-btn').disabled = false; 
+        document.getElementById('delete-cat-btn').disabled = false;
+        const currentManage = manageSelect.value;
+        manageSelect.innerHTML = customCats.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        if (customCats.includes(currentManage)) manageSelect.value = currentManage;
+      }
+    }
+
+    function generateCategoryOptions(selectedCat) {
+      const trimmedSelected = (selectedCat || '').trim();
+      let optionsList = [...allCategories];
+      if (trimmedSelected && trimmedSelected !== 'Uncategorized' && !optionsList.includes(trimmedSelected)) optionsList.push(trimmedSelected);
+      return `<option value="">Uncategorized</option>` + optionsList.map(cat => `<option value="${cat}" ${trimmedSelected === cat ? 'selected' : ''}>${cat}</option>`).join('');
+    }
+
+    async function createCategory() {
+      const input = document.getElementById('new-category-name');
+      const name = input.value.trim();
+      if (!name) return;
+      const { error } = await supabaseClient.from('user_categories').insert([{ name }]);
+      if (error && error.code !== '23505') alert('Error adding category: ' + error.message);
+      else { input.value = ''; await fetchCategories(); renderUI(); }
+    }
+
+    async function renameCategory() {
+      const oldName = document.getElementById('manage-category-select').value;
+      const newName = document.getElementById('rename-category-input').value.trim();
+      if (!oldName || !newName || oldName === newName) return;
+      
+      const { error } = await supabaseClient.from('user_categories').update({ name: newName }).eq('name', oldName);
+      if (error) return alert('Error renaming category: ' + error.message);
+
+      await supabaseClient.from('transactions').update({ user_category: newName }).eq('user_category', oldName);
+      dbCategories = dbCategories.map(c => c === oldName ? newName : c);
+      allTransactions.forEach(tx => { if ((tx.user_category || '').trim() === oldName) tx.user_category = newName; });
+      
+      document.getElementById('rename-category-input').value = '';
+      syncCategoryList(); renderUI(); document.getElementById('manage-categories-dialog').close();
+    }
+
+    async function deleteCategory() {
+      const oldName = document.getElementById('manage-category-select').value;
+      if (!oldName || !confirm(`Delete "${oldName}"? Transactions will revert to Uncategorized.`)) return;
+      
+      const { error } = await supabaseClient.from('user_categories').delete().eq('name', oldName);
+      if (error) return alert('Error deleting category: ' + error.message);
+
+      await supabaseClient.from('transactions').update({ user_category: null }).eq('user_category', oldName);
+      dbCategories = dbCategories.filter(c => c !== oldName);
+      allTransactions.forEach(tx => { if ((tx.user_category || '').trim() === oldName) tx.user_category = null; });
+      
+      syncCategoryList(); renderUI(); document.getElementById('manage-categories-dialog').close();
+    }
+
+    // --- Manual Form Handlers ---
+    function closeManualModal() {
+      document.getElementById('manual-modal').close();
+      document.getElementById('manual-form').reset();
+      document.getElementById('txn-date').valueAsDate = new Date();
+    }
+
+    async function saveManualTransaction(e) {
+      e.preventDefault();
+      const dateVal = document.getElementById('txn-date').value;
+      
+      const newTx = {
+        date: dateVal,
+        reporting_month: dateVal.substring(0, 7),
+        merchant_name: document.getElementById('txn-merchant').value.trim(),
+        amount: parseFloat(document.getElementById('txn-amount').value),
+        user_category: document.getElementById('txn-category').value || null,
+        source: 'manual',
+        transaction_id: null,
+        account_id: 'manual'
+      };
+
+      const { error } = await supabaseClient.from('transactions').insert([newTx]);
+      if (error) { alert('Failed to save manual transaction: ' + error.message); } 
+      else { closeManualModal(); await fetchTransactions(); }
+    }
+
+    // --- Core UI Render Loop ---
+    function renderUI() {
+      populateMonthDropdowns();
+      
+      const summarySelect = document.getElementById('month-filter');
+      const summaryTheme = getMonthTheme(summarySelect.value);
+      summarySelect.style.backgroundColor = summaryTheme.bg;
+      summarySelect.style.color = summaryTheme.text;
+
+      const selectAllCb = document.getElementById('select-all');
+      if (selectAllCb) selectAllCb.checked = false;
+
+      const summaryMonth = summarySelect.value;
+      const txMonthFilter = document.getElementById('tx-month-filter').value;
+      const txCatFilter = document.getElementById('tx-category-filter').value;
+      
+      let rowsHtml = '';
+      const categoryTotals = {};
+      let totalCategorizedExpenses = 0;
+      let totalUncategorizedExpenses = 0;
+      let trackedIncome = 0;
+
+      allTransactions.forEach(tx => {
+        const autoMonth = getReportingMonth(tx);
+        tx.reporting_month = autoMonth;
+        const cat = (tx.user_category || '').trim();
+        const rawAmt = parseAmount(tx.amount);
+
+        if (autoMonth === summaryMonth) {
+          if (cat === 'Does Not Count') { } 
+          else if (cat === 'Income') { trackedIncome += (rawAmt < 0 ? Math.abs(rawAmt) : rawAmt); } 
+          else if (!cat || cat === 'Uncategorized') { totalUncategorizedExpenses += rawAmt; } 
+          else {
+            categoryTotals[cat] = (categoryTotals[cat] || 0) + rawAmt;
+            totalCategorizedExpenses += rawAmt;
+          }
+        }
+
+        let showRow = true;
+        if (txMonthFilter && autoMonth !== txMonthFilter) showRow = false;
+        const displayCategory = cat || 'Uncategorized';
+        if (txCatFilter !== 'All' && displayCategory !== txCatFilter) showRow = false;
+
+        if (showRow) {
+          const sourceClass = tx.source === 'manual' ? 'source-manual' : 'source-simplefin';
+          const sourceText = tx.source === 'manual' ? 'Manual' : 'SimpleFIN';
+          
+          const rowMonthTheme = getMonthTheme(autoMonth);
+          const rowCatTheme = getCategoryTheme(displayCategory);
+
+          rowsHtml += `
+            <tr>
+              <td style="padding-left: 16px;"><input type="checkbox" class="row-checkbox" value="${tx.id}" style="accent-color: var(--primary);"></td>
+              <td style="color: var(--text-muted); font-size: 13px;">${tx.date}</td>
+              <td>
+                <select class="table-select" style="background-color: ${rowMonthTheme.bg}; color: ${rowMonthTheme.text};" onchange="updateTransaction('${tx.id}', 'reporting_month', this.value)">
+                  ${generateInlineMonthOptions(autoMonth)}
+                </select>
+              </td>
+              <td class="merchant-cell">${tx.merchant_name || '—'}</td>
+              <td>
+                <select class="table-select" style="background-color: ${rowCatTheme.bg}; color: ${rowCatTheme.text};" onchange="updateTransaction('${tx.id}', 'user_category', this.value)">
+                  ${generateCategoryOptions(tx.user_category)}
+                </select>
+              </td>
+              <td style="font-weight: 600; text-align: right;">${formatCurrency(rawAmt)}</td>
+              <td style="padding-right: 16px;">
+                <span class="source-badge ${sourceClass}">${sourceText}</span>
+              </td>
+            </tr>
+          `;
+        }
+      });
+
+      document.getElementById('transactions-body').innerHTML = rowsHtml || `<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">No transactions match your filters.</td></tr>`;
+
+      let breakdownHtml = '';
+      let totalBudgetAmount = 0;
+
+      for (const [cat, totalSpent] of Object.entries(categoryTotals)) {
+        const budgeted = categoryBudgets[cat] || 0;
+        totalBudgetAmount += budgeted;
+        const isOverBudget = budgeted > 0 && totalSpent > budgeted;
+        const pctUsed = budgeted > 0 ? Math.round((totalSpent / budgeted) * 100) : 0;
+        const fillWidth = budgeted > 0 ? Math.min(pctUsed, 100) : 0;
+        
+        const theme = getCategoryTheme(cat);
+        let barColor = theme.bar;
+        let pctColor = 'var(--text-muted)';
+        
+        if (budgeted > 0) {
+          if (isOverBudget) { barColor = 'var(--danger)'; pctColor = 'var(--danger)'; } 
+          else if (pctUsed >= 85) { barColor = 'var(--warning)'; pctColor = 'var(--warning)'; }
+        }
+
+        breakdownHtml += `
+          <tr class="clickable-row">
+            <td onclick="filterByCategory('${cat}')">${createBadgeHTML(cat)}</td>
+            <td onclick="event.stopPropagation()">
+              <div class="budget-input-wrapper">
+                <span style="color: var(--text-muted); font-size: 13px; font-weight: 600;">$</span>
+                <input type="number" class="budget-input" value="${budgeted || ''}" placeholder="0" step="10" onchange="updateCategoryBudget('${cat}', this.value)" onclick="event.stopPropagation()">
+              </div>
+            </td>
+            <td onclick="filterByCategory('${cat}')" style="text-align: right; font-weight: 600; ${isOverBudget ? 'color: var(--danger); font-weight: 800;' : ''}">
+              ${formatCurrency(totalSpent)}
+            </td>
+            <td onclick="filterByCategory('${cat}')">
+              ${budgeted > 0 ? `
+                <div class="progress-wrapper">
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width: ${fillWidth}\%; background-color:${barColor};"></div>
+                  </div>
+                  <span class="progress-text" style="color: ${pctColor};">${pctUsed}%</span>
+                </div>
+              ` : `<span class="subtext" style="font-size: 12px; font-weight: 600;">No budget set</span>`}
+            </td>
+          </tr>
+        `;
+      }
+
+      const totalPctUsed = totalBudgetAmount > 0 ? Math.round((totalCategorizedExpenses / totalBudgetAmount) * 100) : 0;
+      const totalFillWidth = totalBudgetAmount > 0 ? Math.min(totalPctUsed, 100) : 0;
+      const totalIsOver = totalBudgetAmount > 0 && totalCategorizedExpenses > totalBudgetAmount;
+
+      breakdownHtml += `
+        <tr class="summary-total-row">
+          <td>Total Budgeted</td>
+          <td>${formatCurrency(totalBudgetAmount)}</td>
+          <td style="text-align: right; ${totalIsOver ? 'color: var(--danger); font-weight: 800;' : ''}">${formatCurrency(totalCategorizedExpenses)}</td>
+          <td>
+            ${totalBudgetAmount > 0 ? `
+              <div class="progress-wrapper">
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" style="width: ${totalFillWidth}\%; background-color:${totalIsOver ? 'var(--danger)' : 'var(--primary)'};"></div>
+                </div>
+                <span class="progress-text">${totalPctUsed}%</span>
+              </div>
+            ` : ''}
+          </td>
+        </tr>
+      `;
+      
+      document.getElementById('category-breakdown-body').innerHTML = breakdownHtml;
+
+      const uncatSection = document.getElementById('uncategorized-section');
+      if (totalUncategorizedExpenses !== 0) {
+        uncatSection.style.display = 'flex';
+        document.getElementById('uncategorized-total').innerText = formatCurrency(totalUncategorizedExpenses);
+        uncatSection.onclick = () => filterByCategory('Uncategorized');
+      } else { uncatSection.style.display = 'none'; }
+
+      const manualIncome = parseAmount(document.getElementById('manual-income').value);
+      const incomeMode = document.getElementById('income-mode').value;
+      let finalTotalIncome = incomeMode === 'add' ? manualIncome + trackedIncome : manualIncome;
+      
+      document.getElementById('income-breakdown-text').innerText = incomeMode === 'add' 
+        ? `Manual (${formatCurrency(manualIncome)}) + Tracked (${formatCurrency(trackedIncome)}) = ${formatCurrency(finalTotalIncome)}`
+        : `Overriding tracked income (${formatCurrency(trackedIncome)} ignored)`;
+
+      const totalExpenses = totalCategorizedExpenses + totalUncategorizedExpenses;
+      const netSurplus = finalTotalIncome - totalExpenses;
+      const resultEl = document.getElementById('budget-result');
+      const labelEl = document.getElementById('surplus-label');
+      
+      if (netSurplus >= 0) { labelEl.innerText = 'Net Surplus'; resultEl.className = 'surplus-display text-green'; } 
+      else { labelEl.innerText = 'Net Deficit'; resultEl.className = 'surplus-display text-red'; }
+      
+      resultEl.innerText = formatCurrency(netSurplus);
+      document.getElementById('expenses-breakdown-text').innerText = `Total Income: ${formatCurrency(finalTotalIncome)} | Total Expenses: ${formatCurrency(totalExpenses)}`;
+    }
+
+    async function updateTransaction(id, field, value) {
+      const tx = allTransactions.find(t => t.id === id);
+      if (!tx) return;
+      const previousValue = tx[field];
+      const dbValue = (field === 'user_category' && value === '') ? null : value;
+      tx[field] = dbValue;
+      syncCategoryList(); renderUI(); 
+      const { error } = await supabaseClient.from('transactions').update({ [field]: dbValue }).eq('id', id);
+      if (error) { alert('Update failed: ' + error.message); tx[field] = previousValue; syncCategoryList(); renderUI(); }
+    }
+
+    function toggleAll(source) { document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = source.checked); }
+
+    async function applyBulkCategory() {
+      const selectedCat = document.getElementById('bulk-category-select').value;
+      if (!selectedCat) return alert('Select a category first.');
+      const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+      if (checkboxes.length === 0) return alert('Select at least one transaction.');
+      const ids = Array.from(checkboxes).map(cb => cb.value);
+
+      allTransactions.forEach(tx => { if (ids.includes(tx.id)) tx.user_category = selectedCat; });
+      syncCategoryList(); renderUI();
+      const { error } = await supabaseClient.from('transactions').update({ user_category: selectedCat }).in('id', ids);
+      if (error) alert('Bulk update failed: ' + error.message);
+    }
+  </script>
+</body>
+</html>
