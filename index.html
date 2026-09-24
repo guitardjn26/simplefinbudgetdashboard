@@ -1038,6 +1038,27 @@
       const { error } = await supabaseClient.from('transactions').update({ user_category: selectedCat }).in('id', ids);
       if (error) alert('Bulk update failed: ' + error.message);
     }
+// 1. Get the current user session
+const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+if (sessionError || !session) {
+  alert('Your session has expired. Please log out and log back in.');
+  return;
+}
+
+// 2. Invoke the Edge Function with the access token in the headers
+const { data, error } = await supabase.functions.invoke('simplefin-sync', {
+  headers: {
+    Authorization: `Bearer ${session.access_token}`
+  }
+});
+
+if (error) {
+  console.error('Sync failed:', error);
+} else {
+  console.log('Sync successful:', data);
+}
+    
   </script>
 </body>
 </html>
