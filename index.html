@@ -543,40 +543,31 @@
       banner.classList.add('hidden');
     }
 
-    // --- Sync Button Handler ---
-    document.getElementById('sync-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('sync-btn');
-      const btnText = document.getElementById('sync-btn-text');
-      const origText = btnText.innerText;
-      btnText.innerText = 'Syncing...'; 
-      btn.disabled = true;
-      hideStatus();
-      
-      try {
-        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-        if (sessionError || !session) {
-          throw new Error('Your session has expired. Please log out and log back in.');
-        }
+   // --- Sync Button Handler ---
+document.getElementById('sync-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('sync-btn');
+  const btnText = document.getElementById('sync-btn-text');
+  const origText = btnText.innerText;
+  btnText.innerText = 'Syncing...'; 
+  btn.disabled = true;
+  hideStatus();
+  
+  try {
+    // The supabaseClient automatically attaches the authenticated user's JWT to the headers
+    const { data, error } = await supabaseClient.functions.invoke('simplefin-sync');
 
-        const { data, error } = await supabaseClient.functions.invoke('simplefin-sync', {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
-        });
+    if (error) throw new Error(error.message);
+    if (data && data.error) throw new Error(data.error);
 
-        if (error) throw new Error(error.message);
-        if (data && data.error) throw new Error(data.error);
-
-        showStatus(`Transactions synced successfully. Imported ${data.count} recent records.`, 'success');
-        await fetchTransactions();
-      } catch (err) {
-        showStatus('Sync failed: ' + err.message, 'error');
-      } finally {
-        btnText.innerText = origText; 
-        btn.disabled = false;
-      }
-    });
-
+    showStatus(`Transactions synced successfully. Imported ${data.count} recent records.`, 'success');
+    await fetchTransactions();
+  } catch (err) {
+    showStatus('Sync failed: ' + err.message, 'error');
+  } finally {
+    btnText.innerText = origText; 
+    btn.disabled = false;
+  }
+});
     // --- Modern Dynamic Color Palette for Category Badges & Months ---
     const themePalette = [
       { bg: '#fee2e2', text: '#991b1b', bar: '#ef4444' },
