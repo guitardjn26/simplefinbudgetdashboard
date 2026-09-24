@@ -543,31 +543,31 @@
       banner.classList.add('hidden');
     }
 
-   // --- Sync Button Handler ---
-document.getElementById('sync-btn').addEventListener('click', async () => {
-  const btn = document.getElementById('sync-btn');
-  const btnText = document.getElementById('sync-btn-text');
-  const origText = btnText.innerText;
-  btnText.innerText = 'Syncing...'; 
-  btn.disabled = true;
-  hideStatus();
-  
-  try {
-    // The supabaseClient automatically attaches the authenticated user's JWT to the headers
-    const { data, error } = await supabaseClient.functions.invoke('simplefin-sync');
+    // --- Sync Button Handler ---
+    document.getElementById('sync-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('sync-btn');
+      const btnText = document.getElementById('sync-btn-text');
+      const origText = btnText.innerText;
+      btnText.innerText = 'Syncing...'; 
+      btn.disabled = true;
+      hideStatus();
+      
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('simplefin-sync');
 
-    if (error) throw new Error(error.message);
-    if (data && data.error) throw new Error(data.error);
+        if (error) throw new Error(error.message);
+        if (data && data.error) throw new Error(data.error);
 
-    showStatus(`Transactions synced successfully. Imported ${data.count} recent records.`, 'success');
-    await fetchTransactions();
-  } catch (err) {
-    showStatus('Sync failed: ' + err.message, 'error');
-  } finally {
-    btnText.innerText = origText; 
-    btn.disabled = false;
-  }
-});
+        showStatus(`Transactions synced successfully. Imported ${data.count} recent records.`, 'success');
+        await fetchTransactions();
+      } catch (err) {
+        showStatus('Sync failed: ' + err.message, 'error');
+      } finally {
+        btnText.innerText = origText; 
+        btn.disabled = false;
+      }
+    });
+
     // --- Modern Dynamic Color Palette for Category Badges & Months ---
     const themePalette = [
       { bg: '#fee2e2', text: '#991b1b', bar: '#ef4444' },
@@ -886,8 +886,9 @@ document.getElementById('sync-btn').addEventListener('click', async () => {
         if (txCatFilter !== 'All' && displayCategory !== txCatFilter) showRow = false;
 
         if (showRow) {
-          const sourceClass = tx.source === 'manual' ? 'source-manual' : 'source-simplefin';
-          const sourceText = tx.source === 'manual' ? 'Manual' : 'SimpleFIN';
+          const isManual = tx.source === 'manual';
+          const sourceClass = isManual ? 'source-manual' : 'source-simplefin';
+          const sourceText = tx.source ? tx.source : 'SimpleFIN';
           
           const rowMonthTheme = getMonthTheme(autoMonth);
           const rowCatTheme = getCategoryTheme(displayCategory);
