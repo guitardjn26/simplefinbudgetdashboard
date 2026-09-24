@@ -886,9 +886,10 @@
         if (txCatFilter !== 'All' && displayCategory !== txCatFilter) showRow = false;
 
         if (showRow) {
-          const isManual = tx.source === 'manual';
-          const sourceClass = isManual ? 'source-manual' : 'source-simplefin';
-          const sourceText = tx.source ? tx.source : 'SimpleFIN';
+const rawSource = tx.display_source || tx.source || '';
+const isManual = rawSource.toLowerCase() === 'manual';
+const sourceClass = isManual ? 'source-manual' : 'source-simplefin';
+const sourceText = rawSource ? rawSource : 'SimpleFIN';
           
           const rowMonthTheme = getMonthTheme(autoMonth);
           const rowCatTheme = getCategoryTheme(displayCategory);
