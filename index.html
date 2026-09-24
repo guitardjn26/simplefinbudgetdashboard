@@ -860,6 +860,13 @@
       
       let rowsHtml = '';
       const categoryTotals = {};
+      
+      allCategories.forEach(cat => {
+        if (cat && cat !== 'Does Not Count' && cat !== 'Income' && cat !== 'Uncategorized') {
+          categoryTotals[cat] = 0;
+        }
+      });
+
       let totalCategorizedExpenses = 0;
       let totalUncategorizedExpenses = 0;
       let trackedIncome = 0;
