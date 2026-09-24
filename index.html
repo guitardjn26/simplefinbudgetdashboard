@@ -874,11 +874,19 @@
         const autoMonth = getReportingMonth(tx);
         tx.reporting_month = autoMonth;
         const cat = (tx.user_category || '').trim();
-        const rawAmt = parseAmount(tx.amount);
+        
+        const rawSource = tx.display_source || tx.source || '';
+        const isManual = rawSource.toLowerCase() === 'manual';
+
+        let rawAmt = parseAmount(tx.amount);
+        // Fix: Invert SimpleFIN values so debits are handled as positive expense figures
+        if (!isManual) {
+          rawAmt = -rawAmt;
+        }
 
         if (autoMonth === summaryMonth) {
           if (cat === 'Does Not Count') { } 
-          else if (cat === 'Income') { trackedIncome += (rawAmt < 0 ? Math.abs(rawAmt) : rawAmt); } 
+          else if (cat === 'Income') { trackedIncome += Math.abs(rawAmt); } 
           else if (!cat || cat === 'Uncategorized') { totalUncategorizedExpenses += rawAmt; } 
           else {
             categoryTotals[cat] = (categoryTotals[cat] || 0) + rawAmt;
@@ -892,13 +900,22 @@
         if (txCatFilter !== 'All' && displayCategory !== txCatFilter) showRow = false;
 
         if (showRow) {
-          const rawSource = tx.display_source || tx.source || '';
-          const isManual = rawSource.toLowerCase() === 'manual';
           const sourceClass = isManual ? 'source-manual' : 'source-simplefin';
           const sourceText = rawSource ? rawSource : 'SimpleFIN';
           
           const rowMonthTheme = getMonthTheme(autoMonth);
           const rowCatTheme = getCategoryTheme(displayCategory);
+
+          let displayStr = formatCurrency(rawAmt);
+          let textColor = 'inherit';
+
+          // Visual formatting: Income displays with a plus sign in green, refunds also show green
+          if (cat === 'Income') {
+            displayStr = '+' + formatCurrency(Math.abs(rawAmt));
+            textColor = 'var(--success)';
+          } else if (rawAmt < 0) {
+            textColor = 'var(--success)'; 
+          }
 
           rowsHtml += `
             <tr>
@@ -915,7 +932,7 @@
                   ${generateCategoryOptions(tx.user_category)}
                 </select>
               </td>
-              <td style="font-weight: 600; text-align: right;">${formatCurrency(rawAmt)}</td>
+              <td style="font-weight: 600; text-align: right; color: ${textColor};">${displayStr}</td>
               <td style="padding-right: 16px;">
                 <span class="source-badge ${sourceClass}">${sourceText}</span>
               </td>
