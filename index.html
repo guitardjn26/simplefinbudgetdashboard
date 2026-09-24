@@ -682,7 +682,6 @@
     async function initialize() {
       await fetchUserSettings();
       await fetchCategories();
-      await fetchCategoryBudgets();
       await fetchTransactions();
     }
 
@@ -702,25 +701,25 @@
       if (error) console.error('Error saving settings:', error.message);
     }
 
-    async function fetchCategoryBudgets() {
-      const { data, error } = await supabaseClient.from('category_budgets').select('category, budgeted_amount');
-      if (!error && data) {
-        categoryBudgets = {};
-        data.forEach(row => categoryBudgets[row.category] = parseAmount(row.budgeted_amount));
-      }
-    }
-
     async function updateCategoryBudget(category, amount) {
       const numAmount = parseAmount(amount);
       categoryBudgets[category] = numAmount;
       renderUI();
-      const { error } = await supabaseClient.from('category_budgets').upsert({ category: category, budgeted_amount: numAmount }, { onConflict: 'category' });
+      const { error } = await supabaseClient.from('user_categories').upsert({ name: category, budgeted_amount: numAmount }, { onConflict: 'name' });
       if (error) console.error('Error updating budget:', error.message);
     }
 
     async function fetchCategories() {
-      const { data, error } = await supabaseClient.from('user_categories').select('name').order('name');
-      if (!error && data) dbCategories = data.map(c => c.name.trim());
+      const { data, error } = await supabaseClient.from('user_categories').select('name, budgeted_amount').order('name');
+      if (!error && data) {
+        dbCategories = [];
+        categoryBudgets = {};
+        data.forEach(row => {
+          const catName = row.name.trim();
+          dbCategories.push(catName);
+          categoryBudgets[catName] = parseAmount(row.budgeted_amount);
+        });
+      }
       syncCategoryList();
     }
 
@@ -893,10 +892,10 @@
         if (txCatFilter !== 'All' && displayCategory !== txCatFilter) showRow = false;
 
         if (showRow) {
-const rawSource = tx.display_source || tx.source || '';
-const isManual = rawSource.toLowerCase() === 'manual';
-const sourceClass = isManual ? 'source-manual' : 'source-simplefin';
-const sourceText = rawSource ? rawSource : 'SimpleFIN';
+          const rawSource = tx.display_source || tx.source || '';
+          const isManual = rawSource.toLowerCase() === 'manual';
+          const sourceClass = isManual ? 'source-manual' : 'source-simplefin';
+          const sourceText = rawSource ? rawSource : 'SimpleFIN';
           
           const rowMonthTheme = getMonthTheme(autoMonth);
           const rowCatTheme = getCategoryTheme(displayCategory);
